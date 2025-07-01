@@ -1,4 +1,4 @@
-// date: 30-06-2025
+// date: 01-07-2025
 
 document.addEventListener("DOMContentLoaded", () => {
   const taskForm = document.getElementById("taskForm");
@@ -32,6 +32,18 @@ document.addEventListener("DOMContentLoaded", () => {
     taskForm.reset();
   });
 
+  function updateStatus(id, newStatus) {
+    tasks = tasks.map(task =>
+      task.id === id ? { ...task, status: newStatus } : task
+    );
+    renderTasks(tasks);
+  }
+
+  function deleteTask(id) {
+    tasks = tasks.filter(task => task.id !== id);
+    renderTasks(tasks);
+  }
+
   function renderTasks(taskArray) {
     taskList.innerHTML = "";
 
@@ -41,6 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const deadlineDate = new Date(task.deadline);
       const now = new Date();
+
       if (deadlineDate < now && task.status !== "Completed") {
         taskCard.classList.add("overdue");
       }
@@ -51,10 +64,20 @@ document.addEventListener("DOMContentLoaded", () => {
         ${task.description ? `<p>${task.description}</p>` : ""}
         <div class="status">
           <span class="status-badge">${task.status}</span>
+          <div class="actions">
+            <button onclick="updateStatus(${task.id}, 'In Progress')">Start</button>
+            <button onclick="updateStatus(${task.id}, 'Completed')">Complete</button>
+            <button onclick="deleteTask(${task.id})">Delete</button>
+          </div>
         </div>
       `;
 
       taskList.appendChild(taskCard);
     });
   }
+
+  renderTasks(tasks);
+
+  window.updateStatus = updateStatus;
+  window.deleteTask = deleteTask;
 });
