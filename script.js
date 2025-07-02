@@ -1,11 +1,13 @@
-// date: 01-07-2025
-
 document.addEventListener("DOMContentLoaded", () => {
   const taskForm = document.getElementById("taskForm");
   const titleInput = document.getElementById("title");
   const deadlineInput = document.getElementById("deadline");
   const descInput = document.getElementById("description");
   const taskList = document.getElementById("taskList");
+  const statusFilter = document.getElementById("statusFilter");
+  const sortOrder = document.getElementById("sortOrder");
+  const progressBarInner = document.getElementById("progressBarInner");
+  const progressText = document.getElementById("progressText");
 
   let tasks = [];
 
@@ -27,27 +29,43 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     tasks.push(task);
-    renderTasks(tasks);
-
+    renderTasks();
     taskForm.reset();
   });
+
+  statusFilter.addEventListener("change", renderTasks);
+  sortOrder.addEventListener("change", renderTasks);
 
   function updateStatus(id, newStatus) {
     tasks = tasks.map(task =>
       task.id === id ? { ...task, status: newStatus } : task
     );
-    renderTasks(tasks);
+    renderTasks();
   }
 
   function deleteTask(id) {
     tasks = tasks.filter(task => task.id !== id);
-    renderTasks(tasks);
+    renderTasks();
   }
 
-  function renderTasks(taskArray) {
+  function renderTasks() {
     taskList.innerHTML = "";
 
-    taskArray.forEach(task => {
+    let filteredTasks = [...tasks];
+
+    const status = statusFilter.value;
+    if (status !== "All") {
+      filteredTasks = filteredTasks.filter(task => task.status === status);
+    }
+
+    const order = sortOrder.value;
+    filteredTasks.sort((a, b) => {
+      const dateA = new Date(a.deadline);
+      const dateB = new Date(b.deadline);
+      return order === "asc" ? dateA - dateB : dateB - dateA;
+    });
+
+    filteredTasks.forEach(task => {
       const taskCard = document.createElement("div");
       taskCard.classList.add("task");
 
@@ -74,9 +92,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
       taskList.appendChild(taskCard);
     });
+
+    updateProgress();
   }
 
-  renderTasks(tasks);
+  function updateProgress() {
+    if (tasks.length === 0) {
+      progressBarInner.style.width = "0%";
+      progressText.textContent = "0% Completed";
+      return;
+    }
+
+    const completed = tasks.filter(task => task.status === "Completed").length;
+    const percent = Math.round((completed / tasks.length) * 100);
+
+    progressBarInner.style.width = `${percent}%`;
+    progressText.textContent = `${percent}% Completed`;
+  }
+
+  renderTasks();
 
   window.updateStatus = updateStatus;
   window.deleteTask = deleteTask;
