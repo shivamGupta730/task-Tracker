@@ -44,8 +44,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function deleteTask(id) {
-    tasks = tasks.filter(task => task.id !== id);
-    renderTasks();
+    if (confirm("Are you sure you want to delete this task?")) {
+      tasks = tasks.filter(task => task.id !== id);
+      renderTasks();
+    }
   }
 
   function renderTasks() {
@@ -65,12 +67,28 @@ document.addEventListener("DOMContentLoaded", () => {
       return order === "asc" ? dateA - dateB : dateB - dateA;
     });
 
+    if (filteredTasks.length === 0) {
+      taskList.innerHTML = "<p style='color:#94a3b8;'>No tasks found.</p>";
+      updateProgress();
+      return;
+    }
+
     filteredTasks.forEach(task => {
       const taskCard = document.createElement("div");
       taskCard.classList.add("task");
 
       const deadlineDate = new Date(task.deadline);
       const now = new Date();
+
+      taskCard.classList.remove("completed", "in-progress", "not-started", "overdue");
+
+      if (task.status === "Completed") {
+        taskCard.classList.add("completed");
+      } else if (task.status === "In Progress") {
+        taskCard.classList.add("in-progress");
+      } else {
+        taskCard.classList.add("not-started");
+      }
 
       if (deadlineDate < now && task.status !== "Completed") {
         taskCard.classList.add("overdue");
@@ -94,6 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     updateProgress();
+    saveTasksToStorage();
   }
 
   function updateProgress() {
@@ -110,6 +129,18 @@ document.addEventListener("DOMContentLoaded", () => {
     progressText.textContent = `${percent}% Completed`;
   }
 
+  function saveTasksToStorage() {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }
+
+  function loadTasksFromStorage() {
+    const storedTasks = localStorage.getItem("tasks");
+    if (storedTasks) {
+      tasks = JSON.parse(storedTasks);
+    }
+  }
+
+  loadTasksFromStorage();
   renderTasks();
 
   window.updateStatus = updateStatus;
